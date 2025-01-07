@@ -7,7 +7,11 @@
         # 'base_setup',
         "base",
     ],
-    # "data": [],
+    "data": [
+        "security/ir.model.access.csv",
+        "views/estate_property_views.xml",
+        "views/estate_menus.xml",
+    ],
     # "demo": [],
     # "css": [],
     "installable": True,

@@ -1,6 +1,6 @@
 from datetime import timedelta
 
-from odoo import api, fields, models
+from odoo import api, fields, models, exceptions
 
 
 class EstateProperty(models.Model):
@@ -37,6 +37,7 @@ class EstateProperty(models.Model):
             ("offer_received", "Offer Received"),
             ("offer_accepted", "Offer Accepted"),
             ("sold", "Sold"),
+            ("canceled", "Canceled"),
         ],
         default="new",
     )
@@ -58,6 +59,8 @@ class EstateProperty(models.Model):
     total_area = fields.Integer(compute="_compute_total_area")
     best_price = fields.Float(compute="_compute_best_price")
 
+    # Compute methods ------------------------------------------------------------------
+
     @api.depends("living_area", "garden_area")
     def _compute_total_area(self):
         for rec in self:
@@ -70,6 +73,8 @@ class EstateProperty(models.Model):
                 max(rec.offer_ids.mapped("price")) if rec.offer_ids else 0.0
             )
 
+    # Constrains and Onchanges ---------------------------------------------------------
+
     @api.onchange("garden")
     def _onchange_garden(self):
         if self.garden:
@@ -78,3 +83,15 @@ class EstateProperty(models.Model):
         else:
             self.garden_area = 0
             self.garden_orientation = False
+
+    # Action methods -------------------------------------------------------------------
+
+    def action_sold(self):
+        if "canceled" in self.mapped("state"):
+            raise exceptions.UserError("Canceled properties cannot be sold.")
+        return self.write({"state": "sold"})
+
+    def action_cancel(self):
+        if "sold" in self.mapped("state"):
+            raise exceptions.UserError("Sold properties cannot be canceled.")
+        return self.write({"state": "canceled"})

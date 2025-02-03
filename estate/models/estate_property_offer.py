@@ -30,6 +30,8 @@ class EstatePropertyOffer(models.Model):
         compute="_compute_date_deadline", inverse="_inverse_date_deadline"
     )
 
+    # Compute methods ------------------------------------------------------------------
+
     @api.depends("create_date", "validity")
     def _compute_date_deadline(self):
         for record in self:
@@ -48,3 +50,16 @@ class EstatePropertyOffer(models.Model):
                 record.validity = (record.date_deadline - fields.Date.today()).days
             else:
                 record.validity = 7
+
+    # Action methods -------------------------------------------------------------------
+
+    def action_accept(self):
+        self.status = "accepted"
+        self.property_id.selling_price = self.price
+        self.property_id.buyer_id = self.partner_id.id
+
+    def action_refuse(self):
+        self.status = "refused"
+        self.property_id.message_post(
+            body=f"Refused offer of {self.price} from {self.partner_id.name}"
+        )

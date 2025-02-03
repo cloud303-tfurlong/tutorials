@@ -6,6 +6,7 @@ class EstateProperty(models.Model):
     _name = "estate.property"
     _description = "Real Estate Property"
 
+    # Basic fields
     name = fields.Char(required=True)
     description = fields.Text()
     postcode = fields.Char()
@@ -38,3 +39,16 @@ class EstateProperty(models.Model):
         ],
         default="new",
     )
+
+    # Relational fields
+    property_type_id = fields.Many2one("estate.property.type")
+    buyer_id = fields.Many2one("res.partner", string="Buyer", readonly=True, copy=False)
+    user_id = fields.Many2one(
+        "res.users",
+        string="Salesman",
+        # index=True,
+        # tracking=True,
+        default=lambda self: self.env.user,
+    )
+    tag_ids = fields.Many2many("estate.property.tag", string="Tags")
+    offer_ids = fields.One2many("estate.property.offer", "property_id", string="Offers")
